@@ -1,12 +1,2121 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>This is My website.</title>
-  </head>
-  <body>
-    <h1>Hello!</h1>
-    <p>You are a sb <strong>suck</strong></p>
-    <p>This is For <em>test</em>!</p>
-    <p>Last time...<br />You are a suck</p>
-  </body>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Windows 11 - JR OS Professional</title>
+    <!-- 引入 Tailwind CSS 库 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        winblue: {
+                            DEFAULT: '#0078d4',
+                            hover: '#0067b8',
+                            light: '#e6f2fc'
+                        },
+                        winbg: {
+                            dark: '#1c1c1c',
+                            light: '#f3f3f3'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap');
+        
+        * {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: pan-x pan-y;
+        }
+
+        .font-mono-os {
+            font-family: 'Fira Code', Consolas, Monaco, monospace !important;
+        }
+
+        /* 隐藏滚动条 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 100, 100, 0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 100, 0.4);
+        }
+
+        /* 亚克力磨砂玻璃 */
+        .acrylic {
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+        }
+
+        /* 窗口出现特效 */
+        .window-animate {
+            animation: winOpen 0.2s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        @keyframes winOpen {
+            from { transform: scale(0.95) translateY(10px); opacity: 0; }
+            to { transform: scale(1) translateY(0); opacity: 1; }
+        }
+
+        /* 开始菜单弹出 */
+        .start-animate {
+            animation: startPop 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+        }
+        @keyframes startPop {
+            from { transform: translateY(100%) scale(0.98); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        /* CRT 关机动效 */
+        .crt-shutdown {
+            animation: crtSec 0.4s ease-out forwards;
+        }
+        @keyframes crtSec {
+            0% { transform: scaleY(1) scaleX(1); filter: brightness(1); }
+            50% { transform: scaleY(0.01) scaleX(1.1); filter: brightness(3); }
+            100% { transform: scaleY(0) scaleX(0); filter: brightness(5); opacity: 0; }
+        }
+
+        /* Windows 经典活动窗口蓝色投影 */
+        .active-window-shadow {
+            box-shadow: 0 15px 40px rgba(0, 120, 212, 0.22);
+        }
+
+        /* 去除输入框默认高亮 */
+        input:focus, textarea:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="overflow-hidden w-screen h-screen select-none bg-sky-900 bg-cover bg-center transition-all duration-300" style="background-image: url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?q=80&w=2560');">
+
+    <!-- 系统底层事件捕获热区 -->
+    <div id="desktop-wallpaper-trigger" class="absolute inset-0 z-0 pointer-events-auto"></div>
+
+    <!--=================== 1. Windows 开机引导 (Boot Screen) ===================-->
+    <div id="boot-screen" class="absolute inset-0 bg-black z-[9999] flex flex-col justify-between items-center py-20 font-mono-os text-white">
+        <div class="flex flex-col items-center mt-20">
+            <!-- 完美的 Windows 11 经典蓝转轮 -->
+            <div class="w-16 h-16 rounded-full border-4 border-zinc-800 border-t-winblue animate-spin mb-8"></div>
+            <div id="boot-log" class="text-xs text-zinc-500 max-w-lg h-32 overflow-y-auto space-y-1 text-center font-mono-os"></div>
+        </div>
+        <div class="flex flex-col items-center space-y-4 w-full max-w-xs">
+            <div class="text-lg font-semibold tracking-wider">Windows 11 Pro</div>
+            <div class="w-full bg-zinc-900 h-1.5 rounded-full overflow-hidden border border-zinc-800">
+                <div id="boot-progress" class="bg-winblue h-full w-0 transition-all duration-100 ease-out"></div>
+            </div>
+            <button id="btn-start-os" class="hidden px-6 py-2.5 bg-winblue hover:bg-winblue-hover text-white font-bold rounded-md shadow-lg transition duration-200 cursor-pointer">
+                开启 Windows 体验
+            </button>
+        </div>
+    </div>
+
+    <!--=================== 2. Windows 11 主桌面 ===================-->
+    <div id="desktop-workspace" class="absolute inset-0 z-10 hidden flex flex-col h-full w-full justify-between pb-12 overflow-hidden">
+        
+        <!-- 桌面图标网络容器 -->
+        <main class="flex-1 w-full relative p-4 grid grid-flow-col auto-cols-[85px] grid-rows-[repeat(auto-fill,100px)] gap-y-4 gap-x-2 content-start items-start z-10" id="desktop-icons-container">
+            <!-- 动态注入 Windows 图标 -->
+        </main>
+
+        <!-- 悬浮窗口堆栈池 -->
+        <div id="window-container" class="absolute inset-0 z-20 pointer-events-none"></div>
+
+        <!-- 11 版日历和通知面板 (System Flyout) -->
+        <div id="calendar-flyout" class="absolute bottom-14 right-3 w-80 dynamic-panel acrylic rounded-xl border border-white/10 shadow-2xl z-50 p-4 hidden flex flex-col space-y-4 transition-all duration-200" style="background: rgba(30, 30, 30, 0.85); color: #fff;">
+            <div class="flex justify-between items-center pb-2 border-b border-white/10">
+                <h4 class="font-bold text-sm" id="flyout-month-year">2026年5月</h4>
+                <div class="flex space-x-1 text-xs">
+                    <button class="p-1 hover:bg-white/10 rounded">▲</button>
+                    <button class="p-1 hover:bg-white/10 rounded">▼</button>
+                </div>
+            </div>
+            <!-- 日历网格 -->
+            <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs">
+                <span class="opacity-50">日</span><span class="opacity-50">一</span><span class="opacity-50">二</span><span class="opacity-50">三</span><span class="opacity-50">四</span><span class="opacity-50">五</span><span class="opacity-50">六</span>
+                <!-- 由 JavaScript 安全渲染 -->
+            </div>
+            <!-- 模拟系统通知 -->
+            <div class="border-t border-white/10 pt-3 space-y-2">
+                <h5 class="text-xs font-bold opacity-60">通知中心</h5>
+                <div class="bg-white/5 p-2 rounded border border-white/5 text-[11px] leading-relaxed">
+                    <p class="font-bold text-winblue">✨ 系统提示</p>
+                    <p class="opacity-80">JR OS 成功加载 Windows 11 核心桌面架构！所有旧版 iPad 触控限制已解除。</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 经典开始菜单 (Start Menu) -->
+        <div id="start-menu" class="absolute bottom-14 dynamic-menu acrylic rounded-2xl border border-white/10 shadow-2xl z-50 p-6 hidden flex flex-col space-y-6 transition-all duration-200" style="width: 580px; height: 600px; background: rgba(30, 30, 30, 0.85); color: #fff; max-width: 95vw;">
+            <!-- 搜索框 -->
+            <div class="relative w-full shrink-0">
+                <input type="text" placeholder=" 搜索应用、文件和设置" class="w-full bg-black/20 border border-white/10 hover:border-white/20 focus:border-winblue rounded-full py-2 px-10 text-xs text-white placeholder-white/50">
+                <span class="absolute left-4 top-2.5">🔍</span>
+            </div>
+
+            <!-- 已固定程序 (Pinned Apps) -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="flex justify-between items-center mb-4 px-1">
+                    <h4 class="font-bold text-xs">已固定</h4>
+                    <button class="text-[11px] bg-white/5 hover:bg-white/10 px-2.5 py-1 rounded border border-white/10">所有应用 &gt;</button>
+                </div>
+                <div class="grid grid-cols-4 sm:grid-cols-6 gap-y-6 gap-x-2 text-center" id="start-menu-pinned-grid">
+                    <!-- 动态由 JS 填充 -->
+                </div>
+            </div>
+
+            <!-- 推荐项目 (Recommended) -->
+            <div class="h-32 shrink-0">
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h4 class="font-bold text-xs">推荐</h4>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="start-menu-recommended-grid">
+                    <!-- 推荐打开的文件 -->
+                </div>
+            </div>
+
+            <!-- 底部用户/电源状态栏 -->
+            <div class="flex items-center justify-between border-t border-white/10 pt-4 shrink-0">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-full bg-winblue flex items-center justify-center text-white font-bold text-sm">A</div>
+                    <span class="text-xs font-semibold">Administrator</span>
+                </div>
+                <button onclick="triggerPowerMenu()" class="p-2 hover:bg-white/10 rounded-lg text-sm" title="电源管理">
+                    🔌
+                </button>
+            </div>
+        </div>
+
+        <!--=================== 3. 全局底部任务栏 (Taskbar) ===================-->
+        <footer class="absolute bottom-0 left-0 right-0 h-12 acrylic border-t border-white/10 flex items-center px-3 z-50 select-none justify-between" style="background: rgba(20, 20, 20, 0.75);">
+            
+            <!-- 靠左：小工具/天气挂件 -->
+            <div class="w-32 hidden md:flex items-center space-x-2 text-xs text-white/80 cursor-pointer hover:bg-white/5 p-1 px-2.5 rounded transition">
+                <span class="text-lg">☀️</span>
+                <div>
+                    <div class="font-bold leading-none">24°C</div>
+                    <span class="text-[10px] opacity-60">晴朗 - 新加坡</span>
+                </div>
+            </div>
+
+            <!-- 中间：核心启动/活动进程区 -->
+            <div class="flex-1 flex justify-center" id="taskbar-center-container">
+                <div class="flex items-center space-x-1" id="taskbar-apps-wrapper">
+                    <!-- 开始徽标 (Windows Logo) -->
+                    <button onclick="toggleStartMenu()" class="w-10 h-10 flex items-center justify-center hover:bg-white/10 rounded-md transition duration-150 active:scale-90" title="开始">
+                        <svg class="w-5 h-5 text-winblue" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M0 3.449L9.75 2.1v9.45H0V3.449zM0 12.45h9.75v9.45L0 20.551v-8.1zM10.8 1.95L24 0v11.55H10.8V1.95zM10.8 12.45H24v11.55l-13.2-1.95v-9.6z"/>
+                        </svg>
+                    </button>
+                    <!-- 搜索挂件 -->
+                    <button class="w-10 h-10 hidden sm:flex items-center justify-center hover:bg-white/10 rounded-md transition" title="搜索">
+                        <span class="text-lg">🔍</span>
+                    </button>
+                    <!-- 动态活动的 App 图标渲染区 -->
+                    <div class="flex items-center space-x-1 overflow-x-auto scrollbar-none" id="taskbar-running-apps"></div>
+                </div>
+            </div>
+
+            <!-- 靠右：系统托盘 (System Tray) -->
+            <div class="w-auto flex items-center space-x-2">
+                <div class="flex items-center space-x-2 text-xs text-white/90 hover:bg-white/10 p-1 px-2.5 rounded transition cursor-pointer" id="tray-icons">
+                    <span class="opacity-80">📶</span>
+                    <span class="opacity-80">🔊</span>
+                    <span class="opacity-80">🔋 98%</span>
+                </div>
+                <!-- 真实的时钟与日期按钮 -->
+                <div onclick="toggleCalendarFlyout()" class="text-right text-[11px] text-white/90 hover:bg-white/10 p-1 px-2.5 rounded transition cursor-pointer select-none font-mono-os" id="taskbar-clock">
+                    <div class="font-bold text-white" id="taskbar-time-text">00:00</div>
+                    <div class="opacity-60 text-[9px] text-white/80" id="taskbar-date-text">2026/05/20</div>
+                </div>
+                <!-- 显示桌面隐形热区 -->
+                <div onclick="minimizeAllWindows()" class="w-1.5 h-10 border-l border-white/10 hover:bg-white/20 transition cursor-pointer" title="显示桌面"></div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!--=================== 4. 各种 Windows APP 自定义内容模板 ===================-->
+    <div class="hidden">
+        
+        <!-- 此电脑 / 文件资源管理器 (File Explorer) -->
+        <div id="template-explorer" class="h-full w-full flex text-white select-none">
+            <!-- 侧栏导航 -->
+            <div class="sidebar-container w-48 bg-zinc-950/40 border-r border-white/5 p-2 hidden sm:flex flex-col space-y-1.5 text-xs shrink-0">
+                <div class="px-2 py-1 opacity-40 uppercase text-[9px] tracking-widest font-bold">快速访问</div>
+                <button data-path="C:/Users/jr_user/Desktop" class="sidebar-btn flex items-center space-x-2.5 p-2 rounded hover:bg-white/5 text-left"><span>Desktop</span><span>桌面</span></button>
+                <button data-path="C:/Users/jr_user/Documents" class="sidebar-btn flex items-center space-x-2.5 p-2 rounded hover:bg-white/5 text-left"><span>Documents</span><span>文档</span></button>
+                <div class="px-2 py-1 opacity-40 uppercase text-[9px] tracking-widest font-bold pt-3">此电脑 (This PC)</div>
+                <button data-path="C:/" class="sidebar-btn flex items-center space-x-2.5 p-2 rounded hover:bg-white/5 text-left"><span>📀</span><span>本地磁盘 (C:)</span></button>
+                <button data-path="D:/" class="sidebar-btn flex items-center space-x-2.5 p-2 rounded hover:bg-white/5 text-left"><span>💿</span><span>虚拟磁盘 (D:)</span></button>
+            </div>
+            <!-- 主视窗区 -->
+            <div class="flex-1 flex flex-col min-w-0 bg-zinc-900/60">
+                <!-- 导航与工具栏 -->
+                <div class="flex items-center justify-between p-2 border-b border-white/5 bg-black/10 select-none flex-wrap gap-2">
+                    <div class="flex items-center space-x-1 flex-1 min-w-0">
+                        <button id="exp-back-btn" class="w-7 h-7 flex items-center justify-center bg-white/5 hover:bg-white/10 active:scale-90 rounded transition">⬅️</button>
+                        <span id="exp-current-path" class="font-mono-os opacity-80 px-3 py-1 bg-black/30 rounded text-xs select-all overflow-hidden whitespace-nowrap flex-1 min-w-0">C:/</span>
+                    </div>
+                    <button id="exp-new-btn" class="px-3 py-1 bg-winblue hover:bg-winblue-hover text-white text-xs font-bold rounded shadow transition active:scale-95 flex items-center space-x-1">
+                        <span>➕</span> <span class="hidden sm:inline">新建文本</span>
+                    </button>
+                </div>
+                <!-- 网格排列 -->
+                <div class="flex-1 overflow-y-auto p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 align-content-start" id="exp-file-grid"></div>
+            </div>
+        </div>
+
+        <!-- 记事本 (Notepad) -->
+        <div id="template-editor" class="h-full w-full flex flex-col overflow-hidden text-sm bg-zinc-900 text-white select-none">
+            <!-- 经典记事本文件菜单栏 -->
+            <div class="flex items-center space-x-4 px-3 py-1 bg-zinc-950/60 border-b border-white/5 text-xs">
+                <button class="hover:bg-white/5 p-1.5 px-2 rounded cursor-pointer" id="editor-menu-file">文件 (F)</button>
+                <button class="hover:bg-white/5 p-1.5 px-2 rounded cursor-pointer">编辑 (E)</button>
+                <button class="hover:bg-white/5 p-1.5 px-2 rounded cursor-pointer">格式 (O)</button>
+                <span id="editor-file-info" class="font-mono-os text-xs opacity-40 ml-auto select-none hidden sm:inline">正在编辑</span>
+            </div>
+            <div class="p-1 border-b border-white/5 bg-zinc-950/20 flex items-center space-x-2">
+                <span class="text-xs text-white/50 pl-2 hidden sm:inline">文件路径:</span>
+                <input type="text" id="editor-file-path" class="bg-black/40 border border-white/5 rounded px-2.5 py-1 text-xs font-mono-os text-winblue flex-1 outline-none" value="C:/Users/jr_user/untitled.txt">
+                <button id="editor-save-btn" class="px-4 py-1 bg-winblue hover:bg-winblue-hover text-white text-xs font-bold rounded-md transition shadow active:scale-95">💾 保存修改</button>
+            </div>
+            <!-- 文本编辑区 -->
+            <textarea id="editor-textarea" class="flex-1 p-4 bg-zinc-950/60 text-white font-mono-os text-sm border-none outline-none resize-none placeholder-zinc-700 select-text" placeholder="在此处开始书写你的程序或文本..."></textarea>
+            <!-- 记事本状态栏 -->
+            <div class="h-6 bg-zinc-950/80 border-t border-white/5 flex items-center justify-between px-3 text-[10px] opacity-60">
+                <span>第 1 行，第 1 列</span>
+                <span class="font-mono-os">UTF-8 | 100% | Windows (CRLF)</span>
+            </div>
+        </div>
+
+        <!-- 任务管理器 (Task Manager) -->
+        <div id="template-monitor" class="h-full w-full flex flex-col overflow-hidden p-3 bg-zinc-900 text-white select-none">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                    <h5 class="text-[11px] font-bold opacity-60 mb-1.5">CPU 性能折线率</h5>
+                    <canvas id="canvas-cpu-chart" class="w-full h-24 bg-zinc-950 rounded border border-white/5"></canvas>
+                </div>
+                <div class="bg-black/30 p-3 rounded-lg border border-white/5">
+                    <h5 class="text-[11px] font-bold opacity-60 mb-1.5">虚拟内存 (RAM)</h5>
+                    <canvas id="canvas-ram-chart" class="w-full h-24 bg-zinc-950 rounded border border-white/5"></canvas>
+                </div>
+            </div>
+            <!-- 内核进程调度管理面板 -->
+            <div class="flex-1 flex flex-col min-h-0 bg-black/20 rounded-lg border border-white/5 p-3 mt-4">
+                <div class="flex justify-between items-center mb-3">
+                    <h5 class="text-xs font-bold opacity-80">当前正在运行的进程 (Processes)</h5>
+                    <span class="text-[10px] bg-winblue/10 text-winblue border border-winblue/20 px-2 py-0.5 rounded">调度模式: CPU Time-Slice</span>
+                </div>
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="border-b border-white/10 opacity-50 font-semibold text-[11px]">
+                                <th class="py-1">PID</th>
+                                <th class="py-1">名称</th>
+                                <th class="py-1">CPU %</th>
+                                <th class="py-1">内存 (KB)</th>
+                                <th class="py-1">状态</th>
+                                <th class="py-1 text-right">管理</th>
+                            </tr>
+                        </thead>
+                        <tbody id="proc-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 浏览器 App 模板 -->
+        <div id="template-browser" class="h-full w-full flex flex-col overflow-hidden text-sm bg-zinc-900 text-white select-none">
+            <div class="flex flex-col border-b border-white/5 bg-black/20 shrink-0 select-none">
+                <div class="flex items-center space-x-2 p-2">
+                    <div class="flex space-x-1 shrink-0">
+                        <button id="browser-back-btn" class="w-8 h-8 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center">⬅️</button>
+                        <button id="browser-forward-btn" class="w-8 h-8 rounded bg-white/5 hover:bg-white/10 disabled:opacity-30 flex items-center justify-center">➡️</button>
+                        <button id="browser-refresh-btn" class="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center">🔄</button>
+                        <button id="browser-home-btn" class="w-8 h-8 rounded bg-white/5 hover:bg-white/10 flex items-center justify-center">🏠</button>
+                    </div>
+                    <div class="flex-1 flex items-center bg-black/40 border border-white/5 rounded-lg px-3 py-1 text-xs">
+                        <span class="text-emerald-500 mr-2 shrink-0 hidden sm:inline">🔒 安全加密</span>
+                        <input type="text" id="browser-url-input" class="bg-transparent border-none outline-none text-zinc-200 flex-1 font-mono-os" value="jros://welcome" autocomplete="off" spellcheck="false">
+                        <button id="browser-go-btn" class="ml-1 px-3 py-0.5 bg-winblue hover:bg-winblue-hover text-white font-bold rounded-md">GO</button>
+                    </div>
+                </div>
+                <div class="w-full bg-zinc-800 h-[2px] overflow-hidden relative">
+                    <div id="browser-progress-bar" class="absolute left-0 top-0 h-full bg-sky-400 w-full transition-all duration-300" style="transform: translateX(-100%);"></div>
+                </div>
+            </div>
+            <div class="flex-1 relative bg-white overflow-hidden text-slate-800" id="browser-view-container">
+                <div id="browser-sandbox" class="absolute inset-0 overflow-y-auto p-6 bg-slate-900 text-slate-100 hidden"></div>
+                <iframe id="browser-iframe" class="absolute inset-0 w-full h-full border-none bg-white hidden" sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
+            </div>
+        </div>
+
+        <!-- 经典太空侵略者游戏 App -->
+        <div id="template-game" class="h-full w-full flex flex-col overflow-hidden p-2 bg-zinc-950 text-white select-none">
+            <div class="flex items-center justify-between pb-2 mb-1 border-b border-white/10 text-xs shrink-0">
+                <div>分数: <span id="game-score" class="font-bold text-amber-400">0</span></div>
+                <div class="opacity-50 hidden sm:inline">控制: 键盘A/D或←/→, 空格发射</div>
+                <button id="game-restart" class="px-2 py-0.5 bg-winblue hover:bg-winblue-hover rounded font-bold transition">重试</button>
+            </div>
+            <div class="flex-1 bg-black rounded-lg relative border border-white/5 overflow-hidden">
+                <canvas id="game-canvas" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+            <!-- ipad触控适配 -->
+            <div class="h-16 flex items-center justify-between px-4 mt-2 bg-black/40 rounded-lg border border-white/5 shrink-0 md:hidden select-none">
+                <div class="flex space-x-2">
+                    <button id="game-btn-left" class="w-12 h-12 bg-white/5 active:bg-white/20 rounded-xl flex items-center justify-center text-lg">◀️</button>
+                    <button id="game-btn-right" class="w-12 h-12 bg-white/5 active:bg-white/20 rounded-xl flex items-center justify-center text-lg">▶️</button>
+                </div>
+                <button id="game-btn-fire" class="w-24 h-12 bg-rose-600 active:bg-rose-500 text-white font-bold rounded-xl flex items-center justify-center text-sm shadow">🔥 发射</button>
+            </div>
+        </div>
+
+        <!-- 系统设置 (Settings) -->
+        <div id="template-settings" class="h-full w-full overflow-y-auto p-5 space-y-6 text-sm bg-zinc-900 text-white select-none font-sans">
+            <div>
+                <h4 class="font-bold border-b border-white/10 pb-2 mb-3">💻 任务栏与桌面排版布局</h4>
+                <div class="flex flex-col space-y-2.5">
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-white/5">
+                        <input type="radio" name="settings-taskbar-align" value="center" checked class="accent-winblue">
+                        <span>Windows 11 风格 (图标居中对齐)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-white/5">
+                        <input type="radio" name="settings-taskbar-align" value="left" class="accent-winblue">
+                        <span>Windows 10 风格 (经典靠左对齐)</span>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold border-b border-white/10 pb-2 mb-3">🎨 个性化桌面壁纸 (Canvas 渲染)</h4>
+                <div class="flex flex-col space-y-2">
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-white/5">
+                        <input type="radio" name="wallpaper-type" value="stars" checked class="accent-winblue">
+                        <span>星际漂移 (3D Starfield)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-white/5">
+                        <input type="radio" name="wallpaper-type" value="rain" class="accent-winblue">
+                        <span>帝国二进制代码雨 (Matrix Rain)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 cursor-pointer p-2 rounded hover:bg-white/5">
+                        <input type="radio" name="wallpaper-type" value="constellation" class="accent-winblue">
+                        <span>多维交互星轨 (Constellations)</span>
+                    </label>
+                </div>
+            </div>
+            <div>
+                <h4 class="font-bold border-b border-white/10 pb-2 mb-3">⚙️ 系统状态与诊断</h4>
+                <div class="bg-black/30 p-4 rounded-lg border border-white/5 text-xs leading-relaxed space-y-1.5 font-mono-os text-zinc-300">
+                    <p>操作系统: Windows 11 Pro - JR Kernel Simulator</p>
+                    <p>核心内核编译版本: v1.2.5 Ultimate (DOM Safe)</p>
+                    <p>处理器: Mock Intel Core i9-13900K @ 5.4GHz</p>
+                    <p>运行状态: 安全沙盒启动，兼容全部版本 iPadOS 触控环境</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 绘图板 (Paint) -->
+        <div id="template-paint" class="h-full w-full flex flex-col overflow-hidden p-2 bg-zinc-900 text-white select-none">
+            <div class="flex items-center space-x-3 pb-2 mb-2 border-b border-white/10 flex-wrap gap-1">
+                <input type="color" id="paint-color" value="#0078d4" class="w-8 h-8 rounded border-none bg-transparent cursor-pointer">
+                <span class="text-xs opacity-60">线宽:</span>
+                <input type="range" id="paint-size" min="1" max="20" value="4" class="w-20 accent-winblue">
+                <button id="paint-clear-btn" class="px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded">🗑️ 抹去画布</button>
+            </div>
+            <div class="flex-1 bg-zinc-950 rounded-lg relative overflow-hidden border border-white/5">
+                <canvas id="paint-canvas" class="absolute inset-0 bg-black cursor-crosshair"></canvas>
+            </div>
+        </div>
+
+        <!-- 8-Bit 和弦音乐播放器 -->
+        <div id="template-synth" class="h-full w-full flex flex-col overflow-hidden p-3 space-y-4 bg-zinc-900 text-white select-none">
+            <div class="bg-black/30 p-3 rounded-lg border border-white/5 flex items-center justify-between">
+                <div>
+                    <h4 class="font-bold text-sm" id="synth-song-title">16-Bit Chiptune Symphony.wav</h4>
+                    <p class="text-[11px] opacity-60 mt-0.5">多路晶体管和弦振荡引擎</p>
+                </div>
+                <div class="flex space-x-2">
+                    <button id="synth-play-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold">▶️ 播放</button>
+                    <button id="synth-stop-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded text-xs font-bold" disabled>⏹️ 停止</button>
+                </div>
+            </div>
+            <div class="flex-1 bg-black rounded-lg relative overflow-hidden border border-white/5">
+                <canvas id="synth-visualizer" class="absolute inset-0 w-full h-full"></canvas>
+            </div>
+        </div>
+
+    </div>
+
+    <!--=================== 5. 核心操作系统引擎 JavaScript ===================-->
+    <script>
+        /**
+         * =========================================================================
+         * ★ 跨域网关配置
+         * =========================================================================
+         */
+        const PROXY_SERVER = "https://your-worker-subdomain.workers.dev/proxy";
+
+        const SYSTEM_STATE = {
+            theme: 'dark',
+            wallpaper: 'stars',
+            taskbarAlignment: 'center',
+            activeWindow: null,
+            cpuLoad: 0,
+            ramLoad: 35,
+            uptime: 0,
+            installedApps: {}
+        };
+
+        // 核心修复：采用通用 click 事件模拟完美的触控双击，彻底兼容所有老旧设备！
+        function addDoubleTapListener(element, callback) {
+            if (!element) return;
+            let lastTap = 0;
+            element.addEventListener('click', function(e) {
+                const currentTime = Date.now();
+                const tapLength = currentTime - lastTap;
+                if (tapLength < 400 && tapLength > 0) {
+                    callback(e);
+                    lastTap = 0;
+                } else {
+                    lastTap = currentTime;
+                }
+            });
+        }
+
+        // 虚拟内存文件系统 (Virtual File System)
+        class VirtualFileSystem {
+            constructor() {
+                this.root = {
+                    name: "",
+                    type: "dir",
+                    children: {
+                        "C:": {
+                            name: "C:",
+                            type: "dir",
+                            children: {
+                                "Windows": { name: "Windows", type: "dir", children: {} },
+                                "Users": {
+                                    name: "Users",
+                                    type: "dir",
+                                    children: {
+                                        "jr_user": {
+                                            name: "jr_user",
+                                            type: "dir",
+                                            children: {
+                                                "Desktop": {
+                                                    name: "Desktop",
+                                                    type: "dir",
+                                                    children: {}
+                                                },
+                                                "Documents": {
+                                                    name: "Documents",
+                                                    type: "dir",
+                                                    children: {
+                                                        "sys_test.txt": { name: "sys_test.txt", type: "file", content: "祝贺！你的 JR OS 已经完美脱离 document.write 与高级语法死锁状态！\n在这个全亚克力风格的操作系统里：\n1. 双击“此电脑”，点击侧边栏的磁盘快速穿梭目录。\n2. 点击右下角的时间挂件，探索全新日历和通知面板。\n3. 在任何 iPad 屏幕上双击图标，享受 100% 流畅的桌面体验！" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "D:": {
+                            name: "D:",
+                            type: "dir",
+                            children: {
+                                "Backup": { name: "Backup", type: "dir", children: {} }
+                            }
+                        }
+                    }
+                };
+            }
+
+            resolvePath(pathStr) {
+                const cleanPath = pathStr.replace(/\\/g, '/').replace(/\/$/, "");
+                if (cleanPath === "" || cleanPath === "/") return { node: this.root, parent: null };
+
+                const parts = cleanPath.split("/").filter(function(p) { return p !== ""; });
+                let current = this.root;
+                let parent = null;
+
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    if (current.type !== "dir") return null;
+                    if (!current.children[part]) return null;
+                    parent = current;
+                    current = current.children[part];
+                }
+                return { node: current, parent: parent };
+            }
+
+            readFile(path) {
+                const res = this.resolvePath(path);
+                if (res && res.node.type === "file") {
+                    return res.node.content;
+                }
+                return null;
+            }
+
+            writeFile(path, content) {
+                const pathParts = path.replace(/\\/g, '/').split("/");
+                const fileName = pathParts.pop();
+                const dirPath = pathParts.join("/");
+                const res = this.resolvePath(dirPath === "" ? "/" : dirPath);
+
+                if (res && res.node.type === "dir") {
+                    res.node.children[fileName] = {
+                        name: fileName,
+                        type: "file",
+                        content: content
+                    };
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        const VFS = new VirtualFileSystem();
+
+        class ProcessScheduler {
+            constructor() {
+                this.processes = [
+                    { pid: 1, name: "System Idle Process (系统空闲)", cpu: 85, ram: 128, status: "运行" },
+                    { pid: 2, name: "wininit.exe (系统初始化)", cpu: 0.1, ram: 2048, status: "睡眠" },
+                    { pid: 3, name: "explorer.exe (外壳视窗管理器)", cpu: 1.5, ram: 16384, status: "运行" },
+                    { pid: 4, name: "taskmgr.exe (任务管理器)", cpu: 2.1, ram: 4096, status: "运行" }
+                ];
+                this.pidCounter = 10;
+                this.loop();
+            }
+
+            spawn(name, ramAlloc) {
+                const newProc = {
+                    pid: this.pidCounter++,
+                    name: name,
+                    cpu: 0,
+                    ram: ramAlloc || 4096,
+                    status: "就绪"
+                };
+                this.processes.push(newProc);
+                return newProc.pid;
+            }
+
+            kill(pid) {
+                const idx = this.processes.findIndex(function(p) { return p.pid === pid; });
+                if (idx !== -1) {
+                    this.processes.splice(idx, 1);
+                    return true;
+                }
+                return false;
+            }
+
+            loop() {
+                setInterval(() => {
+                    let totalCpu = 0;
+                    let totalRam = 450000;
+                    this.processes.forEach(function(p) {
+                        if (p.pid !== 1) {
+                            p.cpu = parseFloat((Math.random() * 4 + 0.2).toFixed(1));
+                            p.ram = Math.floor(p.ram * (0.97 + Math.random() * 0.06));
+                            totalCpu += p.cpu;
+                            totalRam += p.ram;
+                        }
+                    });
+                    this.processes[0].cpu = parseFloat((100 - totalCpu).toFixed(1));
+                    SYSTEM_STATE.cpuLoad = Math.min(99, Math.floor(totalCpu));
+                    SYSTEM_STATE.ramLoad = Math.min(99, Math.floor((totalRam / 8192000) * 100));
+                    
+                    const bar = document.getElementById('top-cpu');
+                    if (bar) bar.style.width = SYSTEM_STATE.cpuLoad + "%";
+                }, 1000);
+            }
+        }
+
+        const Scheduler = new ProcessScheduler();
+
+        // 全局单一 AudioContext 防止 iPadOS 死锁
+        let globalAudioCtx = null;
+        function playSystemSound(freq, type, duration) {
+            if (SYSTEM_STATE.soundMuted) return;
+            try {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                
+                if (!globalAudioCtx) {
+                    globalAudioCtx = new AudioContext();
+                }
+                if (globalAudioCtx.state === 'suspended') {
+                    globalAudioCtx.resume();
+                }
+
+                const osc = globalAudioCtx.createOscillator();
+                const gain = globalAudioCtx.createGain();
+
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq, globalAudioCtx.currentTime);
+
+                gain.gain.setValueAtTime(0.06, globalAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, globalAudioCtx.currentTime + (duration || 0.1));
+
+                osc.connect(gain);
+                gain.connect(globalAudioCtx.destination);
+
+                osc.start();
+                osc.stop(globalAudioCtx.currentTime + (duration || 0.1));
+            } catch (e) { }
+        }
+
+        class WindowManager {
+            constructor() {
+                this.windows = [];
+                this.topZIndex = 30;
+                this.container = document.getElementById('window-container');
+            }
+
+            createWindow(id, title, appTemplateId, initWidth, initHeight, onReadyCallback) {
+                initWidth = initWidth || 640;
+                initHeight = initHeight || 460;
+                
+                const existing = this.windows.find(function(w) { return w.id === id; });
+                if (existing) {
+                    this.focusWindow(id);
+                    existing.minimized = false;
+                    const dom = document.getElementById("win-" + id);
+                    if (dom) dom.classList.remove('hidden');
+                    updateTaskbar();
+                    return;
+                }
+
+                const pid = Scheduler.spawn("App - " + title, 12288);
+                if (window.innerWidth < 640) {
+                    initWidth = window.innerWidth - 10;
+                    initHeight = window.innerHeight - 80;
+                }
+
+                const offsetX = Math.max(15, 40 + (this.windows.length * 25) % (window.innerWidth - initWidth - 10));
+                const offsetY = Math.max(50, 80 + (this.windows.length * 25) % (window.innerHeight - initHeight - 110));
+
+                const winObj = {
+                    id: id,
+                    pid: pid,
+                    title: title,
+                    x: offsetX,
+                    y: offsetY,
+                    width: initWidth,
+                    height: initHeight,
+                    zIndex: ++this.topZIndex,
+                    maximized: false,
+                    minimized: false,
+                    onReady: onReadyCallback
+                };
+
+                this.windows.push(winObj);
+
+                const winHtml = `
+                    <div id="win-${id}" class="absolute dynamic-panel acrylic rounded-xl border border-white/10 shadow-2xl flex flex-col overflow-hidden pointer-events-auto window-animate active-window-shadow transition-[transform,opacity,width,height,top,left] duration-150" 
+                         style="width: ${initWidth}px; height: ${initHeight}px; left: ${offsetX}px; top: ${offsetY}px; z-index: ${winObj.zIndex}; background: rgba(30, 30, 30, 0.75);">
+                        <div class="h-9 bg-black/10 border-b border-white/5 flex items-center justify-between px-3 cursor-move shrink-0 select-none" id="win-header-${id}">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm shrink-0">${this.getAppIcon(id)}</span>
+                                <span class="text-xs font-semibold tracking-wide truncate max-w-[150px] sm:max-w-[280px]">${title}</span>
+                            </div>
+                            <div class="flex items-center h-full shrink-0">
+                                <button onclick="windowManager.minimizeWindow('${id}')" class="w-11 h-9 hover:bg-white/10 flex items-center justify-center transition text-xs opacity-80 hover:opacity-100" title="最小化">🗕</button>
+                                <button onclick="windowManager.maximizeWindow('${id}')" class="w-11 h-9 hover:bg-white/10 flex items-center justify-center transition text-xs opacity-80 hover:opacity-100" title="最大化">🗖</button>
+                                <button onclick="windowManager.closeWindow('${id}')" class="w-11 h-9 hover:bg-red-600 flex items-center justify-center transition text-xs opacity-80 hover:opacity-100" title="关闭">✕</button>
+                            </div>
+                        </div>
+                        <div class="flex-1 overflow-hidden relative" id="win-content-${id}"></div>
+                        <div class="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize bg-transparent z-50" id="win-resizer-${id}"></div>
+                    </div>
+                `;
+
+                this.container.insertAdjacentHTML('beforeend', winHtml);
+
+                const contentContainer = document.getElementById("win-content-" + id);
+                const template = document.getElementById(appTemplateId);
+                if (template) {
+                    const clone = template.cloneNode(true);
+                    clone.classList.remove('hidden');
+                    clone.id = "app-content-" + id;
+                    contentContainer.appendChild(clone);
+                }
+
+                this.bindWindowDrag(id);
+                this.bindWindowResize(id);
+
+                document.getElementById("win-" + id).addEventListener('mousedown', () => { this.focusWindow(id); });
+                document.getElementById("win-" + id).addEventListener('touchstart', () => { this.focusWindow(id); }, {passive: true});
+
+                if (onReadyCallback) {
+                    onReadyCallback(winObj);
+                }
+
+                playSystemSound(600, 'sine', 0.12);
+                this.focusWindow(id);
+                updateTaskbar();
+            }
+
+            getAppIcon(id) {
+                switch(id) {
+                    case 'explorer': return '📂';
+                    case 'editor': return '📝';
+                    case 'browser': return '🌐';
+                    case 'monitor': return '⚙️';
+                    case 'paint': return '🎨';
+                    case 'synth': return '🎵';
+                    case 'settings': return '🎛️';
+                    case 'game': return '🚀';
+                    default: return '⚙️';
+                }
+            }
+
+            focusWindow(id) {
+                const win = this.windows.find(function(w) { return w.id === id; });
+                if (!win) return;
+                this.topZIndex += 2;
+                win.zIndex = this.topZIndex;
+
+                const dom = document.getElementById("win-" + id);
+                if (dom) {
+                    dom.style.zIndex = win.zIndex;
+                    document.querySelectorAll('[id^="win-"]').forEach(function(el) {
+                        el.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+                        el.classList.remove('active-window-shadow');
+                    });
+                    dom.style.borderColor = '#0078d4';
+                    dom.classList.add('active-window-shadow');
+                }
+                SYSTEM_STATE.activeWindow = id;
+                updateTaskbar();
+            }
+
+            closeWindow(id) {
+                const idx = this.windows.findIndex(function(w) { return w.id === id; });
+                if (idx === -1) return;
+
+                const win = this.windows[idx];
+                if (win.onDestroy) {
+                    win.onDestroy();
+                }
+                Scheduler.kill(win.pid);
+
+                const dom = document.getElementById("win-" + id);
+                if (dom) dom.remove();
+
+                this.windows.splice(idx, 1);
+                playSystemSound(300, 'sine', 0.1);
+                updateTaskbar();
+            }
+
+            minimizeWindow(id) {
+                const win = this.windows.find(function(w) { return w.id === id; });
+                if (!win) return;
+                win.minimized = true;
+                const dom = document.getElementById("win-" + id);
+                if (dom) dom.classList.add('hidden');
+                playSystemSound(400, 'sine', 0.05);
+            }
+
+            maximizeWindow(id) {
+                const win = this.windows.find(function(w) { return w.id === id; });
+                if (!win) return;
+
+                const dom = document.getElementById("win-" + id);
+                if (!dom) return;
+
+                if (win.maximized) {
+                    dom.style.width = win.width + "px";
+                    dom.style.height = win.height + "px";
+                    dom.style.left = win.x + "px";
+                    dom.style.top = win.y + "px";
+                    win.maximized = false;
+                } else {
+                    dom.style.width = '100vw';
+                    dom.style.height = 'calc(100vh - 3rem)';
+                    dom.style.left = '0px';
+                    dom.style.top = '0px';
+                    win.maximized = true;
+                }
+                playSystemSound(500, 'sine', 0.08);
+            }
+
+            // 核心修复：全面拥抱最底层的 mousedown/touchstart，杜绝老设备不支持 pointer 的问题
+            bindWindowDrag(id) {
+                const header = document.getElementById("win-header-" + id);
+                const winDom = document.getElementById("win-" + id);
+                const win = this.windows.find(function(w) { return w.id === id; });
+
+                let dragging = false;
+                let startX, startY;
+
+                const onDown = (e) => {
+                    if (win.maximized) return;
+                    if (e.target.tagName.toLowerCase() === 'button') return;
+                    dragging = true;
+                    
+                    const cx = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+
+                    startX = cx - win.x;
+                    startY = cy - win.y;
+                    this.focusWindow(id);
+                    winDom.style.transition = 'none';
+                };
+
+                const onMove = (e) => {
+                    if (!dragging) return;
+                    const cx = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+
+                    if (!cx && !cy) return;
+
+                    win.x = cx - startX;
+                    win.y = cy - startY;
+                    win.y = Math.max(0, win.y);
+
+                    winDom.style.left = win.x + "px";
+                    winDom.style.top = win.y + "px";
+                };
+
+                const onUp = () => {
+                    if (dragging) {
+                        dragging = false;
+                        winDom.style.transition = '';
+                    }
+                };
+
+                header.addEventListener('mousedown', onDown);
+                header.addEventListener('touchstart', onDown, {passive: true});
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchend', onUp);
+            }
+
+            bindWindowResize(id) {
+                const resizer = document.getElementById("win-resizer-" + id);
+                const winDom = document.getElementById("win-" + id);
+                const win = this.windows.find(function(w) { return w.id === id; });
+
+                let resizing = false;
+                let startW, startH, startX, startY;
+
+                const onDown = (e) => {
+                    if (win.maximized) return;
+                    resizing = true;
+                    startW = win.width;
+                    startH = win.height;
+
+                    const cx = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+
+                    startX = cx;
+                    startY = cy;
+                    winDom.style.transition = 'none';
+                    e.stopPropagation();
+                };
+
+                const onMove = (e) => {
+                    if (!resizing) return;
+                    const cx = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                    const cy = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+
+                    if (!cx && !cy) return;
+
+                    win.width = Math.max(340, startW + (cx - startX));
+                    win.height = Math.max(240, startH + (cy - startY));
+
+                    winDom.style.width = win.width + "px";
+                    winDom.style.height = win.height + "px";
+
+                    if (win.onResizeCallback) {
+                        win.onResizeCallback(win.width, win.height);
+                    }
+                };
+
+                const onUp = () => {
+                    if (resizing) {
+                        resizing = false;
+                        winDom.style.transition = '';
+                    }
+                };
+
+                resizer.addEventListener('mousedown', onDown);
+                resizer.addEventListener('touchstart', onDown, {passive: false});
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, {passive: false});
+                document.addEventListener('mouseup', onUp);
+                document.addEventListener('touchend', onUp);
+            }
+        }
+
+        const windowManager = new WindowManager();
+
+        class WallpaperEngine {
+            constructor() {
+                this.canvas = document.getElementById('wallpaper-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resize();
+                this.particles = [];
+                this.stars = [];
+                this.matrixColumns = [];
+                this.initEngine();
+
+                window.addEventListener('resize', () => this.resize());
+                this.animate();
+            }
+
+            resize() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+                this.initEngine();
+            }
+
+            initEngine() {
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+
+                this.stars = [];
+                for (let i = 0; i < 180; i++) {
+                    this.stars.push({
+                        x: Math.random() * w - w / 2,
+                        y: Math.random() * h - h / 2,
+                        z: Math.random() * w,
+                        px: 0, py: 0
+                    });
+                }
+
+                const fontSize = 14;
+                const cols = Math.floor(w / fontSize) + 1;
+                this.matrixColumns = [];
+                for (let i = 0; i < cols; i++) {
+                    this.matrixColumns.push({
+                        y: Math.random() * -h,
+                        speed: Math.random() * 3 + 2
+                    });
+                }
+
+                this.particles = [];
+                for (let i = 0; i < 50; i++) {
+                    this.particles.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        vx: (Math.random() - 0.5) * 0.8,
+                        vy: (Math.random() - 0.5) * 0.8,
+                        r: Math.random() * 3 + 1
+                    });
+                }
+            }
+
+            animate() {
+                const w = this.canvas.width;
+                const h = this.canvas.height;
+                const ctx = this.ctx;
+
+                if (SYSTEM_STATE.wallpaper === 'stars') {
+                    ctx.fillStyle = 'rgba(5, 5, 12, 0.15)';
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = '#0078d4';
+                    for (let i=0; i<this.stars.length; i++) {
+                        let star = this.stars[i];
+                        star.z -= 2;
+                        if (star.z <= 0) {
+                            star.z = w;
+                            star.x = Math.random() * w - w / 2;
+                            star.y = Math.random() * h - h / 2;
+                        }
+
+                        const k = 128.0 / star.z;
+                        const px = star.x * k + w / 2;
+                        const py = star.y * k + h / 2;
+
+                        if (star.px > 0 && star.px < w && star.py > 0 && star.py < h) {
+                            const size = (1 - star.z / w) * 4;
+                            ctx.fillStyle = '#0078d4';
+                            ctx.beginPath();
+                            ctx.arc(px, py, size, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                        star.px = px;
+                        star.py = py;
+                    }
+                } else if (SYSTEM_STATE.wallpaper === 'rain') {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.fillStyle = '#00ff46';
+                    ctx.font = '14px "Fira Code", monospace';
+
+                    const fontSize = 14;
+                    this.matrixColumns.forEach(function(col, i) {
+                        const char = Math.random() > 0.5 ? "1" : "0";
+                        const x = i * fontSize;
+                        ctx.fillText(char, x, col.y);
+
+                        col.y += col.speed;
+                        if (col.y > h && Math.random() > 0.975) {
+                            col.y = 0;
+                        }
+                    });
+                } else if (SYSTEM_STATE.wallpaper === 'constellation') {
+                    ctx.fillStyle = '#1c1c1c';
+                    ctx.fillRect(0, 0, w, h);
+
+                    ctx.lineWidth = 0.5;
+                    for (let i = 0; i < this.particles.length; i++) {
+                        const p1 = this.particles[i];
+                        p1.x += p1.vx;
+                        p1.y += p1.vy;
+
+                        if (p1.x < 0 || p1.x > w) p1.vx *= -1;
+                        if (p1.y < 0 || p1.y > h) p1.vy *= -1;
+
+                        ctx.fillStyle = '#0078d4';
+                        ctx.beginPath();
+                        ctx.arc(p1.x, p1.y, p1.r, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        for (let j = i + 1; j < this.particles.length; j++) {
+                            const p2 = this.particles[j];
+                            const dist = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+                            if (dist < 120) {
+                                ctx.strokeStyle = "rgba(0, 120, 212, " + (1 - dist / 120) + ")";
+                                ctx.beginPath();
+                                ctx.moveTo(p1.x, p1.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+
+                requestAnimationFrame(() => this.animate());
+            }
+        }
+
+        // 📂 FILE EXPLORER (此电脑) 业务逻辑
+        function initExplorerApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            const grid = container.querySelector('#exp-file-grid');
+            const pathText = container.querySelector('#exp-current-path');
+            const backBtn = container.querySelector('#exp-back-btn');
+            const newFileBtn = container.querySelector('#exp-new-btn');
+            let currentPath = "C:/Users/jr_user/Desktop";
+
+            const sidebarButtons = container.querySelectorAll('.sidebar-btn');
+            sidebarButtons.forEach(function(btn) {
+                btn.onclick = () => {
+                    currentPath = btn.getAttribute('data-path');
+                    renderExplorer();
+                };
+            });
+
+            const renderExplorer = () => {
+                grid.innerHTML = '';
+                pathText.innerText = currentPath;
+                backBtn.disabled = currentPath === "C:" || currentPath === "D:" || currentPath === "C:/" || currentPath === "D:/";
+
+                const res = VFS.resolvePath(currentPath);
+                if (!res || res.node.type !== "dir") {
+                    grid.innerHTML = '<div class="text-xs text-red-500 p-4">⚠️ 无法加载指定的磁盘分区或文件夹。</div>';
+                    return;
+                }
+
+                const children = res.node.children;
+
+                Object.keys(children).forEach(function(name) {
+                    const node = children[name];
+                    const isDir = node.type === "dir";
+                    const isExe = name.endsWith('.exe') || name.endsWith('.json');
+
+                    const itemHtml = `
+                        <div class="flex flex-col items-center p-3 rounded-lg hover:bg-white/10 active:bg-white/20 cursor-pointer text-center select-none" id="exp-item-${name}">
+                            <span class="text-3xl mb-1.5">${isDir ? '📁' : (isExe ? '📦' : '📄')}</span>
+                            <span class="text-xs font-mono-os truncate w-full px-1 text-zinc-100">${name}</span>
+                        </div>
+                    `;
+
+                    grid.insertAdjacentHTML('beforeend', itemHtml);
+
+                    const el = grid.querySelector("#exp-item-" + name);
+                    
+                    addDoubleTapListener(el, () => {
+                        if (isDir) {
+                            currentPath = currentPath.endsWith('/') ? currentPath + name : currentPath + "/" + name;
+                            renderExplorer();
+                        } else {
+                            const fullPath = currentPath.endsWith('/') ? currentPath + name : currentPath + "/" + name;
+                            openEditorForFile(fullPath);
+                        }
+                    });
+                });
+            };
+
+            backBtn.onclick = () => {
+                const parts = currentPath.split("/").filter(function(p) { return p !== ""; });
+                parts.pop();
+                currentPath = parts.join("/");
+                if (currentPath === "C:" || currentPath === "D:") currentPath += "/";
+                renderExplorer();
+            };
+
+            newFileBtn.onclick = () => {
+                const newFilePath = currentPath.endsWith('/') ? currentPath + "untitled.txt" : currentPath + "/untitled.txt";
+                openEditorForFile(newFilePath);
+            };
+
+            renderExplorer();
+        }
+
+        function openEditorForFile(path) {
+            windowManager.createWindow('editor', "记事本 - " + path.split("/").pop(), 'template-editor', 560, 420, (win) => {
+                const container = document.getElementById('app-content-' + win.id);
+                const pathInput = container.querySelector('#editor-file-path');
+                const textarea = container.querySelector('#editor-textarea');
+                const saveBtn = container.querySelector('#editor-save-btn');
+                const fileMenuBtn = container.querySelector('#editor-menu-file');
+
+                pathInput.value = path;
+                textarea.value = VFS.readFile(path) || "";
+
+                fileMenuBtn.onclick = () => {
+                    playSystemSound(440, 'sine', 0.1);
+                };
+
+                saveBtn.onclick = () => {
+                    const targetPath = pathInput.value.trim();
+                    if (!targetPath) return;
+
+                    const ok = VFS.writeFile(targetPath, textarea.value);
+                    if (ok) {
+                        playSystemSound(880, 'sine', 0.15);
+                        windowManager.closeWindow('editor');
+                        
+                        const expWin = windowManager.windows.find(function(w) { return w.id === 'explorer'; });
+                        if (expWin) {
+                            initExplorerApp(expWin);
+                        }
+                    }
+                };
+            });
+        }
+
+        // 🌐 BROWSER (Microsoft Edge) 控制器
+        function initBrowserApp(winObj) {
+            const containerId = "app-content-" + winObj.id;
+            const browserDom = document.getElementById(containerId);
+
+            const urlInput = browserDom.querySelector('#browser-url-input');
+            const goBtn = browserDom.querySelector('#browser-go-btn');
+            const backBtn = browserDom.querySelector('#browser-back-btn');
+            const forwardBtn = browserDom.querySelector('#browser-forward-btn');
+            const refreshBtn = browserDom.querySelector('#browser-refresh-btn');
+            const homeBtn = browserDom.querySelector('#browser-home-btn');
+
+            const executeNav = () => {
+                const target = urlInput.value.trim();
+                if (target) {
+                    window.browserNavigate(containerId, target);
+                }
+            };
+
+            urlInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') executeNav();
+            });
+            goBtn.onclick = executeNav;
+
+            backBtn.onclick = () => {
+                if (BROWSER_HISTORY.currentIndex > 0) {
+                    BROWSER_HISTORY.currentIndex--;
+                    const url = BROWSER_HISTORY.historyStack[BROWSER_HISTORY.currentIndex];
+                    window.browserNavigate(containerId, url);
+                    updateBrowserNavButtons(containerId);
+                }
+            };
+
+            forwardBtn.onclick = () => {
+                if (BROWSER_HISTORY.currentIndex < BROWSER_HISTORY.historyStack.length - 1) {
+                    BROWSER_HISTORY.currentIndex++;
+                    const url = BROWSER_HISTORY.historyStack[BROWSER_HISTORY.currentIndex];
+                    window.browserNavigate(containerId, url);
+                    updateBrowserNavButtons(containerId);
+                }
+            };
+
+            refreshBtn.onclick = () => {
+                window.browserNavigate(containerId, urlInput.value.trim());
+            };
+
+            homeBtn.onclick = () => {
+                window.browserNavigate(containerId, 'jros://welcome');
+            };
+
+            window.browserNavigate(containerId, 'jros://welcome');
+        }
+
+        // ⚙️ SYSTEM MONITOR (任务管理器) 折线渲染
+        function initMonitorApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            const canvasCpu = container.querySelector('#canvas-cpu-chart');
+            const canvasRam = container.querySelector('#canvas-ram-chart');
+            const ctxCpu = canvasCpu.getContext('2d');
+            const ctxRam = canvasRam.getContext('2d');
+            const procTable = container.querySelector('#proc-table-body');
+
+            const cpuHistory = new Array(30).fill(0);
+            const ramHistory = new Array(30).fill(30);
+
+            const drawChart = (ctx, canvas, history, max, accentCol) => {
+                const w = canvas.width = canvas.parentElement.clientWidth;
+                const h = canvas.height = 96;
+
+                ctx.fillStyle = "#0c0c0f";
+                ctx.fillRect(0, 0, w, h);
+
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+                ctx.lineWidth = 1;
+                for (let i = 0; i < w; i += 30) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, h);
+                    ctx.stroke();
+                }
+                for (let i = 0; i < h; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, i);
+                    ctx.lineTo(w, i);
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = accentCol;
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+
+                const step = w / (history.length - 1);
+                for (let i = 0; i < history.length; i++) {
+                    const val = history[i];
+                    const x = i * step;
+                    const y = h - (val / max) * h * 0.8 - h * 0.1;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+
+                ctx.fillStyle = "rgba(0, 120, 212, 0.1)";
+                ctx.lineTo(w, h);
+                ctx.lineTo(0, h);
+                ctx.fill();
+            };
+
+            const renderProcesses = () => {
+                procTable.innerHTML = '';
+                Scheduler.processes.forEach(function(p) {
+                    const row = `
+                        <tr class="border-b border-white/5 py-1.5 font-mono-os hover:bg-white/5">
+                            <td class="py-1.5 opacity-60">${p.pid}</td>
+                            <td class="py-1.5 font-bold text-zinc-100">${p.name}</td>
+                            <td class="py-1.5 text-sky-400">${p.cpu}%</td>
+                            <td class="py-1.5 opacity-80">${Math.floor(p.ram/1024)} KB</td>
+                            <td class="py-1.5 text-emerald-400">${p.status}</td>
+                            <td class="py-1.5 text-right">
+                                ${p.pid > 4 ? `
+                                    <button data-pid="${p.pid}" class="kill-btn px-2 py-0.5 bg-rose-600/20 text-rose-400 border border-rose-500/20 rounded hover:bg-rose-600 hover:text-white transition">结束任务</button>
+                                ` : '<span class="opacity-30 text-[10px]">保护中</span>'}
+                            </td>
+                        </tr>
+                    `;
+                    procTable.insertAdjacentHTML('beforeend', row);
+                });
+
+                const killButtons = procTable.querySelectorAll('.kill-btn');
+                killButtons.forEach(function(btn) {
+                    btn.onclick = () => {
+                        const pid = parseInt(btn.getAttribute('data-pid'));
+                        killProcLocal(pid);
+                    };
+                });
+            };
+
+            const killProcLocal = (pid) => {
+                const proc = Scheduler.processes.find(function(p) { return p.pid === pid; });
+                if (proc) {
+                    Scheduler.kill(pid);
+                    if (proc.name.startsWith("App - ")) {
+                        const cleanTitle = proc.name.replace("App - ", "");
+                        const matchWin = windowManager.windows.find(function(w) { return w.title === cleanTitle; });
+                        if (matchWin) windowManager.closeWindow(matchWin.id);
+                    }
+                    playSystemSound(150, 'sawtooth', 0.15);
+                    renderProcesses();
+                }
+            };
+
+            const interval = setInterval(() => {
+                if (!document.getElementById("win-content-monitor")) {
+                    clearInterval(interval);
+                    return;
+                }
+
+                cpuHistory.shift();
+                cpuHistory.push(SYSTEM_STATE.cpuLoad);
+
+                ramHistory.shift();
+                ramHistory.push(SYSTEM_STATE.ramLoad);
+
+                drawChart(ctxCpu, canvasCpu, cpuHistory, 100, '#0078d4');
+                drawChart(ctxRam, canvasRam, ramHistory, 100, '#ff007f');
+                renderProcesses();
+            }, 1000);
+
+            renderProcesses();
+        }
+
+        // 🎨 PAINT (画图) 控制器
+        function initPaintApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            const canvas = container.querySelector('#paint-canvas');
+            const ctx = canvas.getContext('2d');
+            const colorIn = container.querySelector('#paint-color');
+            const sizeIn = container.querySelector('#paint-size');
+            const clearBtn = container.querySelector('#paint-clear-btn');
+
+            let drawing = false;
+
+            const resizeCanvas = () => {
+                const parent = canvas.parentElement;
+                const temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                canvas.width = parent.clientWidth;
+                canvas.height = parent.clientHeight;
+                ctx.fillStyle = '#0a0a0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.putImageData(temp, 0, 0);
+            };
+
+            resizeCanvas();
+            winObj.onResizeCallback = resizeCanvas;
+
+            const getCoords = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const cx = e.clientX || (e.touches && e.touches.length > 0 ? e.touches[0].clientX : 0);
+                const cy = e.clientY || (e.touches && e.touches.length > 0 ? e.touches[0].clientY : 0);
+                return {
+                    x: cx - rect.left,
+                    y: cy - rect.top
+                };
+            };
+
+            const startDraw = (e) => {
+                drawing = true;
+                ctx.beginPath();
+                const coords = getCoords(e);
+                ctx.moveTo(coords.x, coords.y);
+                if(e.cancelable) e.preventDefault();
+            };
+
+            const draw = (e) => {
+                if (!drawing) return;
+                const coords = getCoords(e);
+                ctx.strokeStyle = colorIn.value;
+                ctx.lineWidth = sizeIn.value;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.lineTo(coords.x, coords.y);
+                ctx.stroke();
+                if(e.cancelable) e.preventDefault();
+            };
+
+            const stopDraw = () => {
+                drawing = false;
+                ctx.closePath();
+            };
+
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('touchstart', startDraw, {passive: false});
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('touchmove', draw, {passive: false});
+            document.addEventListener('mouseup', stopDraw);
+            document.addEventListener('touchend', stopDraw);
+
+            clearBtn.onclick = () => {
+                ctx.fillStyle = '#0a0a0f';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                playSystemSound(200, 'sine', 0.15);
+            };
+        }
+
+        // 🎵 MEDIA PLAYER ( Chiptune Tracker)
+        function initSynthApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            const playBtn = container.querySelector('#synth-play-btn');
+            const stopBtn = container.querySelector('#synth-stop-btn');
+            const visualizer = container.querySelector('#synth-visualizer');
+            const vctx = visualizer.getContext('2d');
+
+            let synthTimer = null;
+            let audioCtx = null;
+            let noteIdx = 0;
+
+            const melody = [
+                261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25,
+                392.00, 329.63, 261.63, 392.00, 440.00, 349.23, 523.25, 493.88
+            ];
+
+            const startSynth = () => {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                audioCtx = new AudioContext();
+
+                playBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                noteIdx = 0;
+                synthTimer = setInterval(() => {
+                    if (noteIdx >= melody.length) noteIdx = 0;
+                    const freq = melody[noteIdx];
+
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+
+                    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.28);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start();
+                    osc.stop(audioCtx.currentTime + 0.3);
+
+                    noteIdx++;
+                }, 300);
+
+                animateSpectrum();
+            };
+
+            const stopSynth = () => {
+                if (synthTimer) {
+                    clearInterval(synthTimer);
+                    synthTimer = null;
+                }
+                if (audioCtx) {
+                    audioCtx.close();
+                    audioCtx = null;
+                }
+                playBtn.disabled = false;
+                stopBtn.disabled = true;
+            };
+
+            let specAnimation = null;
+            const animateSpectrum = () => {
+                if (!audioCtx) return;
+                const w = visualizer.width = visualizer.parentElement.clientWidth;
+                const h = visualizer.height = 140;
+
+                vctx.clearRect(0, 0, w, h);
+
+                const barWidth = 10;
+                const barGap = 4;
+                const barCount = Math.floor(w / (barWidth + barGap));
+
+                vctx.fillStyle = '#0078d4';
+                for (let i = 0; i < barCount; i++) {
+                    const val = synthTimer ? Math.sin(Date.now() * 0.01 + i) * 35 + 40 + Math.random() * 15 : 5;
+                    const bh = (val / 100) * h * 0.6;
+                    vctx.fillRect(i * (barWidth + barGap), h - bh, barWidth, bh);
+                }
+
+                specAnimation = requestAnimationFrame(animateSpectrum);
+            };
+
+            playBtn.onclick = startSynth;
+            stopBtn.onclick = stopSynth;
+
+            winObj.onDestroy = () => {
+                stopSynth();
+                cancelAnimationFrame(specAnimation);
+            };
+        }
+
+        // 🚀 ARCADE GAME (太空侵略者)
+        function initGameApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            const canvas = container.querySelector('#game-canvas');
+            const ctx = canvas.getContext('2d');
+            const scoreText = container.querySelector('#game-score');
+            const restartBtn = container.querySelector('#game-restart');
+
+            const btnLeft = container.querySelector('#game-btn-left');
+            const btnRight = container.querySelector('#game-btn-right');
+            const btnFire = container.querySelector('#game-btn-fire');
+
+            let score = 0;
+            let playerX = 150;
+            const playerY = 160;
+            let lasers = [];
+            let enemies = [];
+            let particles = [];
+            let keys = {};
+            let gameLoopInterval = null;
+
+            const resizeGame = () => {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                playerX = canvas.width / 2 - 10;
+            };
+
+            resizeGame();
+            winObj.onResizeCallback = resizeGame;
+
+            const initEnemies = () => {
+                enemies = [];
+                const rows = 3;
+                const cols = Math.floor(canvas.width / 45);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 1; c < cols - 1; c++) {
+                        enemies.push({
+                            x: c * 40,
+                            y: r * 25 + 25,
+                            w: 22,
+                            h: 15,
+                            alive: true
+                        });
+                    }
+                }
+            };
+
+            const triggerExplosion = (x, y) => {
+                for (let i = 0; i < 12; i++) {
+                    particles.push({
+                        x: x, y: y,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        life: 25,
+                        color: "hsl(" + (Math.random() * 60 + 15) + ", 100%, 60%)"
+                    });
+                }
+            };
+
+            const fireLaser = () => {
+                lasers.push({ x: playerX + 8, y: playerY - 5, vy: -4.5 });
+                playSystemSound(900, 'sawtooth', 0.08);
+            };
+
+            const handleKeyDown = (e) => { keys[e.key] = true; if (e.key === ' ') fireLaser(); };
+            const handleKeyUp = (e) => { keys[e.key] = false; };
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            let touchMovingLeft = false;
+            let touchMovingRight = false;
+
+            if (btnLeft && btnRight && btnFire) {
+                btnLeft.addEventListener('mousedown', () => { touchMovingLeft = true; });
+                btnLeft.addEventListener('touchstart', () => { touchMovingLeft = true; }, {passive: true});
+                btnLeft.addEventListener('mouseup', () => { touchMovingLeft = false; });
+                btnLeft.addEventListener('touchend', () => { touchMovingLeft = false; });
+
+                btnRight.addEventListener('mousedown', () => { touchMovingRight = true; });
+                btnRight.addEventListener('touchstart', () => { touchMovingRight = true; }, {passive: true});
+                btnRight.addEventListener('mouseup', () => { touchMovingRight = false; });
+                btnRight.addEventListener('touchend', () => { touchMovingRight = false; });
+
+                btnFire.addEventListener('mousedown', (e) => { fireLaser(); });
+                btnFire.addEventListener('touchstart', (e) => { fireLaser(); if(e.cancelable) e.preventDefault(); }, {passive: false});
+            }
+
+            const updateGame = () => {
+                ctx.fillStyle = '#06060c';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < canvas.width; i += 20) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i, canvas.height);
+                    ctx.stroke();
+                }
+
+                if (keys['ArrowLeft'] || keys['a'] || touchMovingLeft) {
+                    playerX = Math.max(0, playerX - 4);
+                }
+                if (keys['ArrowRight'] || keys['d'] || touchMovingRight) {
+                    playerX = Math.min(canvas.width - 20, playerX + 4);
+                }
+
+                ctx.fillStyle = '#0078d4';
+                ctx.beginPath();
+                ctx.moveTo(playerX + 10, playerY);
+                ctx.lineTo(playerX, playerY + 15);
+                ctx.lineTo(playerX + 20, playerY + 15);
+                ctx.closePath();
+                ctx.fill();
+
+                for (let lIdx = lasers.length - 1; lIdx >= 0; lIdx--) {
+                    let laser = lasers[lIdx];
+                    laser.y += laser.vy;
+                    ctx.fillStyle = '#ff0055';
+                    ctx.fillRect(laser.x, laser.y, 4, 10);
+                    if (laser.y < 0) lasers.splice(lIdx, 1);
+                }
+
+                for (let pIdx = particles.length - 1; pIdx >= 0; pIdx--) {
+                    let part = particles[pIdx];
+                    part.x += part.vx;
+                    part.y += part.vy;
+                    part.life--;
+                    ctx.fillStyle = part.color;
+                    ctx.fillRect(part.x, part.y, 2, 2);
+                    if (part.life <= 0) particles.splice(pIdx, 1);
+                }
+
+                let hasLivingEnemies = false;
+                enemies.forEach(function(enemy) {
+                    if (!enemy.alive) return;
+                    hasLivingEnemies = true;
+
+                    ctx.fillStyle = '#ffb000';
+                    ctx.fillRect(enemy.x, enemy.y, enemy.w, enemy.h);
+                    ctx.fillRect(enemy.x + 3, enemy.y + enemy.h, 4, 3);
+                    ctx.fillRect(enemy.x + enemy.w - 7, enemy.y + enemy.h, 4, 3);
+
+                    for (let lIdx = lasers.length - 1; lIdx >= 0; lIdx--) {
+                        let laser = lasers[lIdx];
+                        if (laser.x > enemy.x && laser.x < enemy.x + enemy.w &&
+                            laser.y > enemy.y && laser.y < enemy.y + enemy.h) {
+                            
+                            enemy.alive = false;
+                            lasers.splice(lIdx, 1);
+                            score += 10;
+                            scoreText.innerText = score;
+                            triggerExplosion(enemy.x + enemy.w / 2, enemy.y + enemy.h / 2);
+                            playSystemSound(250, 'sawtooth', 0.1);
+                        }
+                    }
+                });
+
+                if (!hasLivingEnemies) {
+                    initEnemies();
+                }
+            };
+
+            initEnemies();
+            gameLoopInterval = setInterval(updateGame, 1000 / 60);
+
+            restartBtn.onclick = () => {
+                score = 0;
+                scoreText.innerText = '0';
+                initEnemies();
+            };
+
+            winObj.onDestroy = () => {
+                clearInterval(gameLoopInterval);
+                window.removeEventListener('keydown', handleKeyDown);
+                window.removeEventListener('keyup', handleKeyUp);
+            };
+        }
+
+        const VIRTUAL_INTERNET = {
+            "jros://welcome": {
+                title: "Microsoft Edge - 默认导航主页",
+                body: `
+                    <div class="space-y-6 text-zinc-100 select-text font-sans">
+                        <div class="p-6 rounded-xl bg-gradient-to-r from-winblue/60 to-indigo-900/40 border border-winblue/30 text-center">
+                            <h1 class="text-2xl font-bold text-sky-200">🌐 欢迎使用 Microsoft Edge</h1>
+                            <p class="text-xs text-slate-300 mt-2">在这里，我们提供完全沙箱化的跨域网络反向代理解析技术。你可以畅游以下推荐站点：</p>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="p-4 rounded-lg bg-zinc-800/80 border border-white/5 hover:border-winblue transition">
+                                <h4 class="font-bold text-winblue">🎮 极客街机中心</h4>
+                                <p class="text-[11px] opacity-60 mt-1">调用 Windows 绘图核心，即刻游玩太空入侵者经典机型。</p>
+                                <button onclick="windowManager.createWindow('game', '经典太空侵略者', 'template-game', 460, 450, initGameApp)" class="mt-3 text-xs bg-winblue hover:bg-winblue-hover px-3 py-1 rounded font-bold text-white transition">启动 &rarr;</button>
+                            </div>
+                            <div class="p-4 rounded-lg bg-zinc-800/80 border border-white/5 hover:border-winblue transition">
+                                <h4 class="font-bold text-cyan-400">📖 OSDev.org 操作系统设计百科</h4>
+                                <p class="text-[11px] opacity-60 mt-1">加载全球最大的开源内核硬件开发者学习百科（支持 Iframe）</p>
+                                <button onclick="browserNavigate('app-content-browser', 'https://www.osdev.org')" class="mt-3 text-xs bg-cyan-600 hover:bg-cyan-500 px-3 py-1 rounded font-bold text-white transition">浏览 &rarr;</button>
+                            </div>
+                        </div>
+                    </div>
+                `
+            }
+        };
+
+        const BROWSER_HISTORY = {
+            historyStack: ['jros://welcome'],
+            currentIndex: 0
+        };
+
+        window.browserNavigate = (containerId, targetUrl) => {
+            const browserDom = document.getElementById(containerId);
+            if (!browserDom) return;
+
+            const iframe = browserDom.querySelector('#browser-iframe');
+            const sandbox = browserDom.querySelector('#browser-sandbox');
+            const urlInput = browserDom.querySelector('#browser-url-input');
+            const progress = browserDom.querySelector('#browser-progress-bar');
+
+            progress.style.transition = 'none';
+            progress.style.transform = 'translateX(-100%)';
+            setTimeout(() => {
+                progress.style.transition = 'transform 0.4s ease-out';
+                progress.style.transform = 'translateX(-30%)';
+            }, 50);
+
+            urlInput.value = targetUrl;
+
+            if (targetUrl.startsWith('jros://') || !targetUrl.startsWith('http')) {
+                const normUrl = targetUrl.startsWith('jros://') ? targetUrl : "jros://" + targetUrl;
+                const page = VIRTUAL_INTERNET[normUrl] || {
+                    title: "404 - 无法解析的网址",
+                    body: '<div class="text-center p-8 text-slate-400"><h2 class="text-xl font-bold text-red-500 mb-2">⚠️ 无法寻址该星际坐标</h2></div>'
+                };
+
+                setTimeout(() => {
+                    iframe.classList.add('hidden');
+                    sandbox.classList.remove('hidden');
+                    sandbox.innerHTML = `
+                        <div class="p-4 text-slate-100 select-text font-sans">
+                            <h2 class="text-xl font-bold mb-4">${page.title}</h2>
+                            ${page.body}
+                        </div>
+                    `;
+                    progress.style.transform = 'translateX(0%)';
+                }, 300);
+
+                pushBrowserHistory(containerId, targetUrl);
+            } else {
+                setTimeout(() => {
+                    sandbox.classList.add('hidden');
+                    iframe.classList.remove('hidden');
+                    iframe.src = PROXY_SERVER + "?url=" + encodeURIComponent(targetUrl);
+
+                    iframe.onload = () => {
+                        progress.style.transform = 'translateX(0%)';
+                        playSystemSound(750, 'sine', 0.1);
+                    };
+                }, 300);
+
+                pushBrowserHistory(containerId, targetUrl);
+            }
+        };
+
+        function pushBrowserHistory(containerId, url) {
+            if (BROWSER_HISTORY.historyStack[BROWSER_HISTORY.currentIndex] === url) return;
+            BROWSER_HISTORY.historyStack = BROWSER_HISTORY.historyStack.slice(0, BROWSER_HISTORY.currentIndex + 1);
+            BROWSER_HISTORY.historyStack.push(url);
+            BROWSER_HISTORY.currentIndex = BROWSER_HISTORY.historyStack.length - 1;
+            updateBrowserNavButtons(containerId);
+        }
+
+        function updateBrowserNavButtons(containerId) {
+            const browserDom = document.getElementById(containerId);
+            if (!browserDom) return;
+            const backBtn = browserDom.querySelector('#browser-back-btn');
+            const forwardBtn = browserDom.querySelector('#browser-forward-btn');
+            backBtn.disabled = BROWSER_HISTORY.currentIndex <= 0;
+            forwardBtn.disabled = BROWSER_HISTORY.currentIndex >= BROWSER_HISTORY.historyStack.length - 1;
+        }
+
+        window.addEventListener('message', (e) => {
+            if (e.data && e.data.type === 'jros-browser-navigated') {
+                const browserDom = document.getElementById('app-content-browser');
+                if (browserDom) {
+                    const urlInput = browserDom.querySelector('#browser-url-input');
+                    if (urlInput) urlInput.value = e.data.url;
+                    pushBrowserHistory('app-content-browser', e.data.url);
+                }
+            }
+        });
+
+        const bootLogs = [
+            "JR-BIOS Pro v2.10 Copyright (C) 2026 J&R OS Corp.",
+            "CPU: Intel(R) Core(TM) i9-13900K @ 5.40GHz",
+            "RAM: 65536MB OK. Cache Enabled.",
+            "Detecting Primary Windows Partition (C: NTFS)... SUCCESS",
+            "Loading Windows 11 Bootloader (winload.efi)... SUCCESS",
+            "Entering Protected Mode... GDT, IDT loaded.",
+            "Launching explorer.exe and Shell Server...",
+            "Registry initialized. Applying personalization Bloom theme...",
+            "Desktop System Loaded. Welcome Admin."
+        ];
+
+        const desktopApps = [
+            { id: 'explorer', label: '此电脑', icon: '📂' },
+            { id: 'browser', label: 'Microsoft Edge', icon: '🌐' },
+            { id: 'editor', label: '记事本', icon: '📝' },
+            { id: 'monitor', label: '任务管理器', icon: '⚙️' },
+            { id: 'paint', label: '画图', icon: '🎨' },
+            { id: 'synth', label: '媒体播放器', icon: '🎵' },
+            { id: 'game', label: '太空入侵者', icon: '🚀' },
+            { id: 'settings', label: '设置', icon: '🎛️' }
+        ];
+
+        // 高兼容系统启动函数
+        function startBootSequence() {
+            const logBox = document.getElementById('boot-log');
+            const progress = document.getElementById('boot-progress');
+            const startBtn = document.getElementById('btn-start-os');
+            let logIdx = 0;
+
+            const printNextLog = () => {
+                if (logIdx < bootLogs.length) {
+                    const div = document.createElement('div');
+                    div.innerText = "> " + bootLogs[logIdx];
+                    logBox.appendChild(div);
+                    logBox.scrollTop = logBox.scrollHeight;
+
+                    const percent = Math.floor(((logIdx + 1) / bootLogs.length) * 100);
+                    progress.style.width = percent + "%";
+
+                    logIdx++;
+                    setTimeout(printNextLog, Math.random() * 80 + 30);
+                } else {
+                    startBtn.classList.remove('hidden');
+                }
+            };
+
+            setTimeout(printNextLog, 400);
+
+            startBtn.onclick = () => {
+                playSystemSound(523.25, 'triangle', 0.15);
+                setTimeout(() => playSystemSound(659.25, 'triangle', 0.15), 150);
+                setTimeout(() => playSystemSound(783.99, 'triangle', 0.3), 300);
+
+                document.getElementById('boot-screen').classList.add('hidden');
+                document.getElementById('desktop-workspace').classList.remove('hidden');
+
+                window.wallpaperEngine = new WallpaperEngine();
+                initDesktop();
+            };
+        }
+
+        // 核心修复：防止 DOMContentLoaded 竞态丢失导致一直卡在黑屏
+        if (document.readyState === 'loading') {
+            window.addEventListener('DOMContentLoaded', startBootSequence);
+        } else {
+            startBootSequence();
+        }
+
+        function updateClock() {
+            const clockEl = document.getElementById('taskbar-time-text');
+            const dateEl = document.getElementById('taskbar-date-text');
+            if (clockEl && dateEl) {
+                const now = new Date();
+                clockEl.innerText = now.toTimeString().split(' ')[0].substring(0, 5);
+                dateEl.innerText = now.getFullYear() + "/" + String(now.getMonth() + 1).padStart(2, '0') + "/" + String(now.getDate()).padStart(2, '0');
+            }
+            SYSTEM_STATE.uptime++;
+        }
+
+        function openApp(id) {
+            document.getElementById('start-menu').classList.add('hidden');
+
+            switch (id) {
+                case 'explorer':
+                    windowManager.createWindow('explorer', '此电脑 (This PC) - 文件资源管理器', 'template-explorer', 680, 480, initExplorerApp);
+                    break;
+                case 'editor':
+                    windowManager.createWindow('editor', '无标题 - 记事本', 'template-editor', 560, 420, () => {
+                        openEditorForFile("C:/Users/jr_user/Documents/sys_test.txt");
+                    });
+                    break;
+                case 'browser':
+                    windowManager.createWindow('browser', 'Microsoft Edge', 'template-browser', 720, 500, initBrowserApp);
+                    break;
+                case 'monitor':
+                    windowManager.createWindow('monitor', '任务管理器 (Task Manager)', 'template-monitor', 620, 450, initMonitorApp);
+                    break;
+                case 'paint':
+                    windowManager.createWindow('paint', '画图 (Paint)', 'template-paint', 560, 450, initPaintApp);
+                    break;
+                case 'synth':
+                    windowManager.createWindow('synth', '和弦媒体播放器', 'template-synth', 480, 320, initSynthApp);
+                    break;
+                case 'game':
+                    windowManager.createWindow('game', '经典太空侵略者', 'template-game', 460, 450, initGameApp);
+                    break;
+                case 'settings':
+                    windowManager.createWindow('settings', '系统设置 (Settings)', 'template-settings', 480, 420, initSettingsApp);
+                    break;
+            }
+        }
+
+        function initDesktop() {
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            const calGrid = document.getElementById('calendar-grid');
+            const today = new Date().getDate();
+            const daysInMonth = 31;
+            for (let i = 1; i <= daysInMonth; i++) {
+                const span = document.createElement('span');
+                span.className = "p-1.5 hover:bg-winblue/30 rounded-md cursor-pointer " + (i === today ? 'bg-winblue text-white font-bold' : '');
+                span.innerText = i;
+                calGrid.appendChild(span);
+            }
+
+            const container = document.getElementById('desktop-icons-container');
+            container.innerHTML = '';
+
+            desktopApps.forEach(function(app) {
+                const iconHtml = `
+                    <div class="flex flex-col items-center justify-center p-2 rounded-xl hover:bg-white/10 active:bg-white/20 transition cursor-pointer text-center w-[80px]" id="desk-icon-${app.id}">
+                        <span class="text-3xl mb-1.5 filter drop-shadow-md select-none">${app.icon}</span>
+                        <span class="text-[11px] font-semibold text-white tracking-wide truncate w-full filter drop-shadow-md">${app.label}</span>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', iconHtml);
+
+                const el = document.getElementById("desk-icon-" + app.id);
+                addDoubleTapListener(el, () => {
+                    openApp(app.id);
+                });
+            });
+
+            const startGrid = document.getElementById('start-menu-pinned-grid');
+            startGrid.innerHTML = '';
+            desktopApps.forEach(function(app) {
+                const tile = document.createElement('div');
+                tile.className = "flex flex-col items-center justify-center p-2.5 rounded-xl hover:bg-white/10 cursor-pointer transition select-none";
+                tile.innerHTML = `
+                    <span class="text-3xl mb-1">${app.icon}</span>
+                    <span class="text-[10px] text-white/90 truncate w-full">${app.label}</span>
+                `;
+                tile.onclick = () => openApp(app.id);
+                startGrid.appendChild(tile);
+            });
+
+            const recommendedGrid = document.getElementById('start-menu-recommended-grid');
+            recommendedGrid.innerHTML = '';
+            const recItem = document.createElement('div');
+            recItem.className = "flex items-center space-x-3 p-2 rounded-lg hover:bg-white/10 cursor-pointer text-xs select-none w-full";
+            recItem.innerHTML = `
+                <span>📄</span>
+                <div class="truncate text-left">
+                    <p class="font-bold truncate">sys_test.txt</p>
+                    <p class="opacity-50 text-[10px]">刚刚打开 - C:/Users/jr_user/Documents</p>
+                </div>
+            `;
+            recItem.onclick = () => openApp('editor');
+            recommendedGrid.appendChild(recItem);
+
+            updateTaskbar();
+
+            document.getElementById('desktop-wallpaper-trigger').onclick = () => {
+                document.getElementById('start-menu').classList.add('hidden');
+                document.getElementById('calendar-flyout').classList.add('hidden');
+            };
+        }
+
+        function updateTaskbar() {
+            const trayContainer = document.getElementById('taskbar-running-apps');
+            trayContainer.innerHTML = '';
+
+            windowManager.windows.forEach(function(win) {
+                const activeBar = SYSTEM_STATE.activeWindow === win.id ? 'bg-winblue w-4' : 'bg-white/40 w-1.5';
+                const appMeta = desktopApps.find(function(app) { return app.id === win.id; });
+                const icon = appMeta ? appMeta.icon : '⚙️';
+
+                const appHtml = `
+                    <div id="taskbar-item-${win.id}" class="relative group cursor-pointer w-10 h-10 flex flex-col items-center justify-center hover:bg-white/10 rounded-md transition duration-150 active:scale-90 select-none">
+                        <span class="text-2xl">${icon}</span>
+                        <span class="absolute bottom-1 h-[3px] rounded-full transition-all duration-200 ${activeBar}"></span>
+                    </div>
+                `;
+                trayContainer.insertAdjacentHTML('beforeend', appHtml);
+
+                const item = trayContainer.querySelector("#taskbar-item-" + win.id);
+                item.onclick = () => windowManager.focusWindow(win.id);
+            });
+        }
+
+        function toggleStartMenu() {
+            const menu = document.getElementById('start-menu');
+            document.getElementById('calendar-flyout').classList.add('hidden');
+            menu.classList.toggle('hidden');
+            if (!menu.classList.contains('hidden')) {
+                menu.classList.add('start-animate');
+                playSystemSound(700, 'sine', 0.05);
+            }
+        }
+
+        function toggleCalendarFlyout() {
+            const flyout = document.getElementById('calendar-flyout');
+            document.getElementById('start-menu').classList.add('hidden');
+            flyout.classList.toggle('hidden');
+            if (!flyout.classList.contains('hidden')) {
+                playSystemSound(700, 'sine', 0.05);
+            }
+        }
+
+        function minimizeAllWindows() {
+            windowManager.windows.forEach(function(win) {
+                windowManager.minimizeWindow(win.id);
+            });
+            document.getElementById('start-menu').classList.add('hidden');
+            document.getElementById('calendar-flyout').classList.add('hidden');
+        }
+
+        function initSettingsApp(winObj) {
+            const container = document.getElementById('app-content-' + winObj.id);
+            
+            const alignRadios = container.querySelectorAll('input[name="settings-taskbar-align"]');
+            alignRadios.forEach(function(radio) {
+                radio.onchange = (e) => {
+                    const align = e.target.value;
+                    const centerContainer = document.getElementById('taskbar-center-container');
+                    if (align === 'left') {
+                        centerContainer.className = "flex-1 flex justify-start pl-8";
+                    } else {
+                        centerContainer.className = "flex-1 flex justify-center";
+                    }
+                    playSystemSound(600, 'sine', 0.05);
+                };
+            });
+
+            const wallpaperRadios = container.querySelectorAll('input[name="wallpaper-type"]');
+            wallpaperRadios.forEach(function(radio) {
+                radio.onchange = (e) => {
+                    SYSTEM_STATE.wallpaper = e.target.value;
+                    playSystemSound(600, 'sine', 0.05);
+                };
+            });
+        }
+
+        function triggerPowerMenu() {
+            playSystemSound(150, 'sawtooth', 0.4);
+            const desktop = document.getElementById('desktop-workspace');
+            desktop.classList.add('crt-shutdown');
+            document.getElementById('start-menu').classList.add('hidden');
+            setTimeout(() => {
+                document.body.innerHTML = `
+                    <div class="w-full h-full bg-black flex flex-col items-center justify-center font-mono-os text-zinc-600 text-xs select-none">
+                        <span class="text-sm font-semibold mb-1">[ Windows 11 已成功安全关机 ]</span>
+                        <span class="opacity-40">请刷新网页重新点火启动系统。</span>
+                    </div>
+                `;
+            }, 400);
+        }
+    </script>
+</body>
 </html>
